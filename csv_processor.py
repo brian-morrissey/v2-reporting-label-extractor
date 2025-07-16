@@ -93,7 +93,6 @@ def process_csv_file(csv_file_path, max_rows=None):
     print(f"\nProcessing completed in {elapsed_total:.1f} seconds")
     print(f"Total rows processed: {total_rows:,}")
     print(f"Rows with MAINTAINER: {maintainer_found_count:,}")
-    print(f"Rows without MAINTAINER: {missing_maintainer_count:,}")
     
     return unique_entries
 
@@ -122,12 +121,6 @@ def create_final_dictionary(unique_entries):
     final_dict = {}
     for image_id, maintainer in entries_with_maintainer:
         final_dict[image_id] = maintainer
-    
-    print(f"\nFINAL RESULTS:")
-    print("=" * 50)
-    print(f"Entries WITH MAINTAINER: {len(entries_with_maintainer):,} unique combinations")
-    print(f"Entries WITHOUT MAINTAINER: {len(entries_without_maintainer):,} unique Image IDs")
-    print(f"Final dictionary size: {len(final_dict):,} entries")
     
     return final_dict, entries_with_maintainer, entries_without_maintainer
 
@@ -162,12 +155,20 @@ def main():
         final_dict, entries_with_maintainer, entries_without_maintainer = create_final_dictionary(unique_entries)
         
         # Display results
-        display_results(final_dict, entries_with_maintainer)
+        #display_results(final_dict, entries_with_maintainer)
         
         # Print final dictionary variable info
         print(f"\nThe final dictionary 'final_dict' contains {len(final_dict):,} unique Image ID -> MAINTAINER mappings")
-        print("You can access individual entries like: final_dict['<image_id>']")
+        #print("You can access individual entries like: final_dict['<image_id>']")
         
+        # Write results to output.csv
+        output_file = 'output.csv'
+        with open(output_file, 'w', newline='', encoding='utf-8') as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow(['Image ID', 'Maintainer'])
+            for image_id, maintainer in final_dict.items():
+             writer.writerow([image_id, maintainer])
+        print(f"\nResults written to {output_file}")
         return final_dict
     else:
         print("No data was processed successfully.")
