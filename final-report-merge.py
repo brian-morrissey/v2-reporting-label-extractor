@@ -11,8 +11,8 @@ with open('./output.csv', newline='', encoding='utf-8') as out_csv:
         if image_id is not None:
             output_dict[image_id] = vsad
 
-# Step 2: Open v2-report.csv and merged-report.csv
-with open('./v2-report.csv', newline='', encoding='utf-8') as v2_csv, \
+# Step 2: Open v1-report.csv and merged-report.csv
+with open('./v1-report.csv', newline='', encoding='utf-8') as v2_csv, \
      open('merged-report.csv', 'w', newline='', encoding='utf-8') as merged_csv:
 
     v2_reader = csv.DictReader(v2_csv)
