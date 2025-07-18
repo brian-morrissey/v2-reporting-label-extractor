@@ -1,6 +1,9 @@
 # v2-reporting-label-extractor
 Unique container label extractor for Sysdig v2 Reporting
 
+Expectations:
+v1-report.csv is already downloaded and available on the filesystem using previously existing methods
+
 Step 1:
 get_sysdig_v2_reports.py = example to list, download, and extract v2 report to the current directory
 
