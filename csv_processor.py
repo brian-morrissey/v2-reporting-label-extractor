@@ -5,19 +5,19 @@ from collections import defaultdict
 
 def process_csv_file(csv_file_path, max_rows=None):
     """
-    Process CSV file to extract unique Image ID and Container Labels/MAINTAINER pairs
+    Process CSV file to extract unique Image ID and Namespace Labels/tenable.vsad pairs
     
     Args:
         csv_file_path (str): Path to the CSV file
         max_rows (int, optional): Maximum number of rows to process (None for all rows)
     
     Returns:
-        dict: Dictionary with unique Image ID -> MAINTAINER mappings
+        dict: Dictionary with unique Image ID -> tenable.vsad mappings
     """
     unique_entries = {}
-    missing_maintainer_count = 0
+    missing_vsad_count = 0
     total_rows = 0
-    maintainer_found_count = 0
+    vsad_found_count = 0
     
     print(f"Starting to process the CSV file: {csv_file_path}")
     if max_rows:
@@ -43,43 +43,43 @@ def process_csv_file(csv_file_path, max_rows=None):
                     elapsed = time.time() - start_time
                     print(f"Processed {total_rows:,} rows... ({elapsed:.1f}s elapsed)")
                 
-                # Extract Image ID and Container Labels
+                # Extract Image ID and Namespace Labels
                 image_id = row.get('Image ID', '') or ''
-                container_labels_str = row.get('Container Labels', '') or ''
+                namespace_labels_str = row.get('Namespace Labels', '') or ''
                 
                 # Strip whitespace if not None
                 image_id = image_id.strip() if image_id else ''
-                container_labels_str = container_labels_str.strip() if container_labels_str else ''
+                namespace_labels_str = namespace_labels_str.strip() if namespace_labels_str else ''
                 
                 # Skip rows with empty Image ID
                 if not image_id:
                     continue
                 
-                # Parse Container Labels JSON
-                maintainer = None
-                if container_labels_str:
+                # Parse Namespace Labels JSON
+                vsad = None
+                if namespace_labels_str:
                     try:
-                        container_labels = json.loads(container_labels_str)
-                        # Look for MAINTAINER key
-                        for key, value in container_labels.items():
-                            if key == 'MAINTAINER':
-                                maintainer = value
-                                maintainer_found_count += 1
+                        namespace_labels = json.loads(namespace_labels_str)
+                        # Look for tenable.vsad key
+                        for key, value in namespace_labels.items():
+                            if key == 'kubernetes.namespace.label.tenable.vsad':
+                                vsad = value
+                                vsad_found_count += 1
                                 break
                     except json.JSONDecodeError:
                         # If JSON parsing fails, skip this entry
                         continue
                 
-                # Count entries without MAINTAINER
-                if maintainer is None:
-                    missing_maintainer_count += 1
+                # Count entries without vsad
+                if vsad is None:
+                    missing_vsad_count += 1
                 
-                # Create unique key combination (image_id, maintainer)
-                key = (image_id, maintainer)
+                # Create unique key combination (image_id, vsad)
+                key = (image_id, vsad)
                 if key not in unique_entries:
                     unique_entries[key] = {
                         'image_id': image_id,
-                        'maintainer': maintainer
+                        'vsad': vsad
                     }
     
     except FileNotFoundError:
@@ -92,52 +92,52 @@ def process_csv_file(csv_file_path, max_rows=None):
     elapsed_total = time.time() - start_time
     print(f"\nProcessing completed in {elapsed_total:.1f} seconds")
     print(f"Total rows processed: {total_rows:,}")
-    print(f"Rows with MAINTAINER: {maintainer_found_count:,}")
+    print(f"Rows with vsad: {vsad_found_count:,}")
     
     return unique_entries
 
 def create_final_dictionary(unique_entries):
     """
-    Create final dictionary with Image ID -> MAINTAINER mappings
+    Create final dictionary with Image ID -> vsad mappings
     
     Args:
         unique_entries (dict): Dictionary from process_csv_file function
     
     Returns:
-        dict: Final dictionary with Image ID -> MAINTAINER mappings
+        dict: Final dictionary with Image ID -> vsad mappings
     """
-    # Separate entries with and without MAINTAINER
-    entries_with_maintainer = []
-    entries_without_maintainer = []
+    # Separate entries with and without vsad
+    entries_with_vsad = []
+    entries_without_vsad = []
     
     for key, value in unique_entries.items():
-        image_id, maintainer = key
-        if maintainer:
-            entries_with_maintainer.append((image_id, maintainer))
+        image_id, vsad = key
+        if vsad:
+            entries_with_vsad.append((image_id, vsad))
         else:
-            entries_without_maintainer.append((image_id, maintainer))
+            entries_without_vsad.append((image_id, vsad))
     
-    # Create final dictionary with only entries that have MAINTAINER
+    # Create final dictionary with only entries that have vsad
     final_dict = {}
-    for image_id, maintainer in entries_with_maintainer:
-        final_dict[image_id] = maintainer
+    for image_id, vsad in entries_with_vsad:
+        final_dict[image_id] = vsad
     
-    return final_dict, entries_with_maintainer, entries_without_maintainer
+    return final_dict, entries_with_vsad, entries_without_vsad
 
-def display_results(final_dict, entries_with_maintainer, show_count=10):
+def display_results(final_dict, entries_with_vsad, show_count=10):
     """
     Display the results in a readable format
     
     Args:
-        final_dict (dict): Final dictionary with Image ID -> MAINTAINER mappings
-        entries_with_maintainer (list): List of tuples (image_id, maintainer)
+        final_dict (dict): Final dictionary with Image ID -> vsad mappings
+        entries_with_vsad (list): List of tuples (image_id, vsad)
         show_count (int): Number of entries to display (default: 10)
     """
-    print(f"\nFINAL DICTIONARY FORMAT (Image ID -> MAINTAINER):")
+    print(f"\nFINAL DICTIONARY FORMAT (Image ID -> vsad):")
     print("=" * 50)
     print("Sample entries from the dictionary:")
-    for i, (image_id, maintainer) in enumerate(list(final_dict.items())):
-        print(f"  '{image_id}': '{maintainer}'")
+    for i, (image_id, vsad) in enumerate(list(final_dict.items())):
+        print(f"  '{image_id}': '{vsad}'")
 
 def main():
     """
@@ -152,26 +152,26 @@ def main():
     
     if unique_entries:
         # Create final dictionary
-        final_dict, entries_with_maintainer, entries_without_maintainer = create_final_dictionary(unique_entries)
+        final_dict, entries_with_vsad, entries_without_vsad = create_final_dictionary(unique_entries)
         
         # Display results
-        #display_results(final_dict, entries_with_maintainer)
+        #display_results(final_dict, entries_with_vsad)
         
         # Print final dictionary variable info
-        print(f"\nThe final dictionary 'final_dict' contains {len(final_dict):,} unique Image ID -> MAINTAINER mappings")
+        print(f"\nThe final dictionary 'final_dict' contains {len(final_dict):,} unique Image ID -> vsad mappings")
         #print("You can access individual entries like: final_dict['<image_id>']")
         
         # Write results to output.csv
         output_file = 'output.csv'
         with open(output_file, 'w', newline='', encoding='utf-8') as csvfile:
             writer = csv.writer(csvfile)
-            writer.writerow(['Image ID', 'Maintainer'])
-            for image_id, maintainer in final_dict.items():
-             writer.writerow([image_id, maintainer])
+            writer.writerow(['Image ID', 'vsad'])
+            for image_id, vsad in final_dict.items():
+             writer.writerow([image_id, vsad])
         print(f"\nResults written to {output_file}")
         return final_dict
     else:
-        print("No data was processed successfully.")
+        print("No data was processed")
         return None
 
 if __name__ == "__main__":
